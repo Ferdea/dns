@@ -24,9 +24,8 @@ class Answer:
     a_type: int
     a_class: int
     ttl: int
-    rdlength: int
+    rd_length: int
     rdata: bytes | list[bytes]
-    data: list[str]
 
 
 @dataclass
