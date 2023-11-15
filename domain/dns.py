@@ -27,10 +27,16 @@ class DnsServer:
     def handle_connection(self, data: bytes, address: str) -> None:
         info(f'Handle connection from {address} with data: {data}')
         message: Message = parse_message(data)
-        answer: bytes = self.find_ip(
-            message.question[0].q_name,
-            message.header.transaction_id
-        )
+
+        if 'multiply' in message.question[0].q_name:
+            answer: bytes = (
+                self.handle_multiply_request('.'.join(message.question[0].q_name), message.header.transaction_id))
+        else:
+            answer: bytes = self.find_ip(
+                message.question[0].q_name,
+                message.header.transaction_id
+            )
+
         self.socket.sendto(answer, address)
 
     def find_ip(self, name: list[str], transaction_id: int) -> bytes:
@@ -60,3 +66,11 @@ class DnsServer:
                 for authority in message.authority:
                     if authority.a_type == 2:
                         ips.append('.'.join(list(part.decode('utf-8') for part in authority.rdata)))
+
+    def handle_multiply_request(self, name: str, transaction_id: int) -> bytes:
+        result = 1
+
+        for number in name.split('.')[:-1]:
+            result = (result * int(number)) % 256
+
+        return create_response(name, transaction_id, f'127.0.0.{result}')

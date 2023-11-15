@@ -7,10 +7,11 @@ def create_response(
         transaction_id: int,
         ip: str
 ) -> bytes:
-    response: bytes = create_request(name, transaction_id)
+    response: bytes = create_request(name, transaction_id, b'\x81\x80\x00\x01\x00\x01\x00\x00\x00\x00')
 
-    for part in map(lambda p: p.encode, name.split('.')):
-        response += pack('!B', len(part)) + part
+    for part in name.split('.'):
+        encoded_part = part.encode()
+        response += pack('!B', len(encoded_part)) + encoded_part
 
     ip_data = pack('!4B', *[int(part) for part in ip.split('.')])
 
